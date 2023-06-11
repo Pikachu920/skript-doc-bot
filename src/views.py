@@ -131,10 +131,10 @@ class SearchView(discord.ui.View):
         if len(elements) > 0:
             options = [
                 SelectOption(
-                    label=f"{element.required_addon}: {element.name}"[
+                    label=element.detailed_name[
                         :SELECT_OPTION_LABEL_MAX_LENGTH
                     ],
-                    value=element.unique_id,
+                    value=element.provider_specific_id,
                 )
                 for element in elements
             ]
@@ -174,7 +174,7 @@ class SearchView(discord.ui.View):
 
     def _set_selected_element(self, element: SyntaxElement):
         for option in self.element_select_menu.options:
-            option.default = option.value == element.unique_id
+            option.default = option.value == element.provider_specific_id
 
     async def on_timeout(self) -> None:
         self._disable_ui()
@@ -186,7 +186,7 @@ class SearchView(discord.ui.View):
         selected_element = next(
             element
             for element in self.elements
-            if element.unique_id == self.element_select_menu.values[0]
+            if element.provider_specific_id == self.element_select_menu.values[0]
         )
         self._set_selected_element(selected_element)
         await self.original_interaction.edit_original_response(
@@ -202,7 +202,6 @@ class SearchView(discord.ui.View):
         )
         new_combined_provider = CombinedDocumentationProvider(selected_providers)
         results = await new_combined_provider.perform_search(self.search_options)
-        # TODO: handle the case where the new providers have no results :(
         if len(results) > 0:
             self.element_select_menu.disabled = False
             self.confirm_button.disabled = False

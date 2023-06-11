@@ -13,3 +13,4 @@ environment variables:
 - `SKRIPT_SKRIPTHUB_TOKEN`: Your Skript Hub API token
 - `SKRIPT_SKUNITY_KEY`: Your SkUnity API key
 - `SKRIPT_DISCORD_TOKEN`: Your bots Discord token
+- `SKRIPT_DATA_PATH`: The path to store the bot data at

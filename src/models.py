@@ -2,8 +2,6 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Sequence, Optional, TYPE_CHECKING
 
-import persistent
-
 if TYPE_CHECKING:
     from providers import DocumentationProvider
 
@@ -42,11 +40,16 @@ class SyntaxElement:
     link: Optional[str]
 
     @property
-    def unique_id(self) -> str:
+    def provider_specific_id(self) -> str:
         return f"{self.provider.name}:{self.id}"
+
+    @property
+    def detailed_name(self) -> str:
+        return f"{self.required_addon}: {self.name}"
+
 
 
 @dataclass
-class GuildConfig(persistent.Persistent):
+class GuildConfig:
     preferred_providers: Optional[Sequence[str]]
     enforce_preferred_providers: Optional[bool]

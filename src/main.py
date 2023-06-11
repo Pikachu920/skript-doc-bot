@@ -1,5 +1,6 @@
 import logging
 import os
+from pathlib import Path
 
 import discord
 from asynctinydb import TinyDB, Query
@@ -24,7 +25,8 @@ providers = {
     "skunity": SkUnityDocumentationProvider(os.environ["SKRIPT_SKUNITY_KEY"]),
 }
 
-database = TinyDB("data.json")
+database_path = Path(os.environ["SKRIPT_DATA_PATH"]) / "data.json"
+database = TinyDB(str(database_path.resolve()))
 config_table = database.table("configurations")
 
 

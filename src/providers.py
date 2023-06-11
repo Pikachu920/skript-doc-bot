@@ -157,7 +157,7 @@ class SkUnityDocumentationProvider(DocumentationProvider):
             examples=examples,
             required_addon=element["addon"],
             required_addon_version=_convert_addon_version(element["version"]),
-            required_minecraft_version="",  # TODO: this
+            required_minecraft_version=None,  # TODO: this
             type=SkUnityDocumentationProvider._compute_type(element),
             required_plugins=tuple(element["plugin"]),
             return_type=element["returntype"],
@@ -181,7 +181,7 @@ class SkUnityDocumentationProvider(DocumentationProvider):
 
     @property
     def name(self):
-        return "SkUnity"
+        return "skUnity"
 
     @property
     def icon_url(self):
@@ -195,6 +195,7 @@ class CombinedDocumentationProvider(DocumentationProvider):
         self.providers = list(providers)
 
     async def perform_search(self, options: SearchOptions) -> Sequence[SyntaxElement]:
+        discovered_elements = {}
         elements = []
         for provider in self.providers:
             if len(elements) >= MAX_SELECT_OPTION_COUNT:
@@ -203,7 +204,9 @@ class CombinedDocumentationProvider(DocumentationProvider):
             try:
                 results = await provider.perform_search(options)
                 for result in results:
-                    elements.append(result)
+                    if result.detailed_name not in discovered_elements:
+                        discovered_elements[result.detailed_name] = True
+                        elements.append(result)
             except Exception:
                 logging.error(
                     f"Provider {provider.name} failed to provide results", exc_info=True
