@@ -2,6 +2,8 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Sequence, Optional, TYPE_CHECKING
 
+import discord
+
 if TYPE_CHECKING:
     from providers import DocumentationProvider
 
@@ -12,7 +14,8 @@ class SearchOptions:
 
 
 class SyntaxType(Enum):
-    EFFECT = "effect"
+
+    EFFECT = "effect",
     CONDITION = "condition"
     EXPRESSION = "expression"
     SECTION = "section"
@@ -20,6 +23,45 @@ class SyntaxType(Enum):
     EVENT = "event"
     CLASSINFO = "classinfo"
 
+    @property
+    def colour(self) -> discord.Colour:
+        match self:
+            case SyntaxType.EFFECT:
+                return discord.Colour.from_rgb(1, 120, 255)
+            case SyntaxType.CONDITION:
+                return discord.Colour.from_rgb(255, 61, 61)
+            case SyntaxType.SECTION:
+                return discord.Colour.from_rgb(26, 188, 156)
+            case SyntaxType.FUNCTION:
+                return discord.Colour.from_rgb(180, 180, 180)
+            case SyntaxType.EVENT:
+                return discord.Colour.from_rgb(167, 99, 255)
+            case SyntaxType.CLASSINFO:
+                return discord.Colour.from_rgb(243, 156, 18)
+            case SyntaxType.EXPRESSION:
+                return discord.Colour.from_rgb(13, 229, 5)
+            case _:
+                raise ValueError(f"Unimplemented SyntaxType {self.name}")
+
+    @property
+    def emoji(self) -> str:
+        match self:
+            case SyntaxType.EFFECT:
+                return "🇪🇺"
+            case SyntaxType.CONDITION:
+                return "🟥"
+            case SyntaxType.SECTION:
+                return "🟦"
+            case SyntaxType.FUNCTION:
+                return "⬜"
+            case SyntaxType.EVENT:
+                return "🟪"
+            case SyntaxType.CLASSINFO:
+                return "🟧"
+            case SyntaxType.EXPRESSION:
+                return "🟩"
+            case _:
+                raise ValueError(f"Unimplemented SyntaxType {self.name}")
 
 @dataclass
 class SyntaxElement:

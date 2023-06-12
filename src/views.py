@@ -17,7 +17,6 @@ from providers import DocumentationProvider, CombinedDocumentationProvider
 
 
 class SearchView(discord.ui.View):
-    EMBED_COLOUR = Colour.from_rgb(113, 54, 138)
 
     @staticmethod
     async def generate_embed(element: SyntaxElement) -> discord.Embed:
@@ -37,7 +36,7 @@ class SearchView(discord.ui.View):
         embed = discord.Embed(
             title=element.name,
             description=description,
-            colour=SearchView.EMBED_COLOUR,
+            colour=element.type.colour,
             url=element.link,
         )
 
@@ -94,6 +93,7 @@ class SearchView(discord.ui.View):
         search_options: SearchOptions,
         guild_config: GuildConfig,
         recent_users: Sequence[User],
+        default_recent_user_id: int,
     ):
         super().__init__(timeout=INTERACTION_TIMEOUT.total_seconds())
         self.search_options = search_options
@@ -109,10 +109,15 @@ class SearchView(discord.ui.View):
             self._set_selected_element(self.elements[0])
         self.add_item(self.element_select_menu)
 
-        self.reply_to = None
+        self.reply_to = default_recent_user_id
         self.recent_users = recent_users
-        if isinstance(original_interaction.channel, TextChannel) and len(recent_users) > 0:
-            self.reply_select_menu = self._create_reply_select_menu(self.recent_users)
+        if (
+            isinstance(original_interaction.channel, TextChannel)
+            and len(recent_users) > 0
+        ):
+            self.reply_select_menu = self._create_reply_select_menu(
+                self.recent_users, default_recent_user_id
+            )
             self.add_item(self.reply_select_menu)
 
         if not guild_config.enforce_preferred_providers:
@@ -135,12 +140,19 @@ class SearchView(discord.ui.View):
         self.cancel_button.callback = self.handle_cancel
         self.add_item(self.cancel_button)
 
-    def _create_reply_select_menu(self, users: Sequence[discord.User]) -> Select:
+    def _create_reply_select_menu(
+        self, users: Sequence[discord.User], default_recent_user_id: int
+    ) -> Select:
         reply_select_menu = Select(
             placeholder="Who is this for?",
             min_values=0,
             options=[
-                SelectOption(label=user.display_name, value=str(user.id)) for user in users
+                SelectOption(
+                    label=user.display_name,
+                    value=str(user.id),
+                    default=user.id == default_recent_user_id,
+                )
+                for user in users
             ],
         )
         reply_select_menu.callback = self.handle_reply_select
@@ -152,6 +164,7 @@ class SearchView(discord.ui.View):
                 SelectOption(
                     label=element.detailed_name[:SELECT_OPTION_LABEL_MAX_LENGTH],
                     value=element.provider_specific_id,
+                    emoji=element.type.emoji,
                 )
                 for element in elements
             ]

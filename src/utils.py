@@ -27,11 +27,15 @@ def join_english_or(parts: Sequence[str]) -> str:
         return parts[0]
 
 
-async def try_to_get_recent_users(bot: discord.Client,
-    channel: Messageable, excluded_user_ids: Sequence[int], message_limit: int = 25
+async def try_to_get_recent_users(
+    bot: discord.Client,
+    channel: Messageable,
+    excluded_user_ids: Sequence[int],
+    message_limit: int = 25,
 ) -> Sequence[User]:
-
-    async def convert_to_user(message: discord.Message) -> discord.User | discord.Member:
+    async def convert_to_user(
+        message: discord.Message,
+    ) -> discord.User | discord.Member:
         guild = message.guild
         if guild is not None:
             fetched_member = await guild.fetch_member(message.author.id)
@@ -49,8 +53,8 @@ async def try_to_get_recent_users(bot: discord.Client,
     except discord.Forbidden:
         return tuple()
 
+
 def get_appropriate_name(user: discord.User | discord.Member) -> str:
     if isinstance(user, Member):
         return user.display_name
     return user.mention
-

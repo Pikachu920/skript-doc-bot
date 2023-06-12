@@ -1,6 +1,7 @@
 import logging
 import os
 from pathlib import Path
+from typing import Optional
 
 import discord
 from asynctinydb import TinyDB, Query
@@ -34,6 +35,7 @@ config_table = database.table("configurations")
 @bot.event
 async def on_ready():
     logging.info(f"Logged in as {bot.user} (ID: {bot.user.id})")
+    await bot.tree.sync()
 
 
 async def get_guild_config(guild_id: int) -> GuildConfig:
@@ -130,8 +132,10 @@ async def handle_set_sources_enforce_command(
 
 
 @bot.tree.command(name="docs", description="Searches Skript documentation")
-@app_commands.describe(query="The query to search for")
-async def handle_sources_command(interaction: discord.Interaction, query: str):
+@app_commands.describe(query="The query to search for", reply_to="The user to reply to")
+async def handle_sources_command(
+    interaction: discord.Interaction, query: str, reply_to: Optional[discord.Member]
+):
     await interaction.response.defer(ephemeral=True)
 
     guild_config = await get_guild_config(interaction.guild_id)
@@ -160,6 +164,7 @@ async def handle_sources_command(interaction: discord.Interaction, query: str):
                     interaction.channel,
                     excluded_user_ids=(bot.user.id, interaction.user.id),
                 ),
+                reply_to.id if reply_to is not None else None,
             ),
             embed=await SearchView.generate_embed(results[0]),
             ephemeral=True,
