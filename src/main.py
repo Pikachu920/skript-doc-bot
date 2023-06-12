@@ -133,7 +133,7 @@ async def handle_set_sources_enforce_command(
 
 @bot.tree.command(name="docs", description="Searches Skript documentation")
 @app_commands.describe(query="The query to search for", reply_to="The user to reply to")
-async def handle_sources_command(
+async def handle_docs_command(
     interaction: discord.Interaction, query: str, reply_to: Optional[discord.Member]
 ):
     await interaction.response.defer(ephemeral=True)
