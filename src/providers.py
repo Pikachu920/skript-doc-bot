@@ -16,7 +16,7 @@ def _convert_addon_version(addon_version: Optional[str]) -> Optional[str]:
     if casefold_addon_version == "unknown":
         return None
     elif casefold_addon_version.startswith("unknown"):
-        return addon_version[len("unknown"):].strip()
+        return addon_version[len("unknown") :].strip()
     return addon_version
 
 
@@ -69,7 +69,9 @@ class SkriptHubDocumentationProvider(DocumentationProvider):
             patterns=html.unescape(element["syntax_pattern"]).split("\n"),
             examples=None,
             required_addon=element["addon"],
-            required_addon_version=_convert_addon_version(element["compatible_addon_version"]),
+            required_addon_version=_convert_addon_version(
+                element["compatible_addon_version"]
+            ),
             required_minecraft_version=element["compatible_minecraft_version"],
             type=SkriptHubDocumentationProvider._compute_type(element),
             required_plugins=tuple(
@@ -189,6 +191,7 @@ class SkUnityDocumentationProvider(DocumentationProvider):
 
 
 # TODO: implement skriptlang. skriptlang docs site currently generates invalid json :(
+
 
 class CombinedDocumentationProvider(DocumentationProvider):
     def __init__(self, providers: Sequence[DocumentationProvider]):

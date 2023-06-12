@@ -48,7 +48,6 @@ class SyntaxElement:
         return f"{self.required_addon}: {self.name}"
 
 
-
 @dataclass
 class GuildConfig:
     preferred_providers: Optional[Sequence[str]]

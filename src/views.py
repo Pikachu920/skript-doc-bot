@@ -1,7 +1,7 @@
 from typing import Sequence
 
 import discord.ui
-from discord import ButtonStyle, SelectOption, Colour
+from discord import ButtonStyle, SelectOption, Colour, TextChannel, User
 from discord.ui import Select
 
 import utils
@@ -22,8 +22,7 @@ class SearchView(discord.ui.View):
     @staticmethod
     async def generate_embed(element: SyntaxElement) -> discord.Embed:
         await element.provider.prepare_element_for_display(element)
-
-        if element.description is not None and element.description.strip() != "":
+        if element.description is not None and element.description != "":
             if len(element.description) > 200:
                 clamped_description = element.description[
                     :ELEMENT_DESCRIPTION_MAX_LENGTH
@@ -62,7 +61,9 @@ class SearchView(discord.ui.View):
         requirements = []
         if element.required_addon is not None:
             if element.required_addon_version is not None:
-                requirements.append(f"{element.required_addon} {element.required_addon_version}")
+                requirements.append(
+                    f"{element.required_addon} {element.required_addon_version}"
+                )
             else:
                 requirements.append(element.required_addon)
         if element.required_minecraft_version is not None:
@@ -92,6 +93,7 @@ class SearchView(discord.ui.View):
         enabled_providers: Sequence[DocumentationProvider],
         search_options: SearchOptions,
         guild_config: GuildConfig,
+        recent_users: Sequence[User],
     ):
         super().__init__(timeout=INTERACTION_TIMEOUT.total_seconds())
         self.search_options = search_options
@@ -106,6 +108,12 @@ class SearchView(discord.ui.View):
         if len(elements) > 0:
             self._set_selected_element(self.elements[0])
         self.add_item(self.element_select_menu)
+
+        self.reply_to = None
+        self.recent_users = recent_users
+        if isinstance(original_interaction.channel, TextChannel) and len(recent_users) > 0:
+            self.reply_select_menu = self._create_reply_select_menu(self.recent_users)
+            self.add_item(self.reply_select_menu)
 
         if not guild_config.enforce_preferred_providers:
             self.provider_select_menu = self._create_provider_select_menu(
@@ -127,13 +135,22 @@ class SearchView(discord.ui.View):
         self.cancel_button.callback = self.handle_cancel
         self.add_item(self.cancel_button)
 
+    def _create_reply_select_menu(self, users: Sequence[discord.User]) -> Select:
+        reply_select_menu = Select(
+            placeholder="Who is this for?",
+            min_values=0,
+            options=[
+                SelectOption(label=user.display_name, value=str(user.id)) for user in users
+            ],
+        )
+        reply_select_menu.callback = self.handle_reply_select
+        return reply_select_menu
+
     def _create_element_select_menu(self, elements: Sequence[SyntaxElement]) -> Select:
         if len(elements) > 0:
             options = [
                 SelectOption(
-                    label=element.detailed_name[
-                        :SELECT_OPTION_LABEL_MAX_LENGTH
-                    ],
+                    label=element.detailed_name[:SELECT_OPTION_LABEL_MAX_LENGTH],
                     value=element.provider_specific_id,
                 )
                 for element in elements
@@ -181,6 +198,10 @@ class SearchView(discord.ui.View):
         await self.original_interaction.edit_original_response(view=self)
         self.stop()
 
+    async def handle_reply_select(self, interaction: discord.Interaction):
+        await interaction.response.defer()
+        self.reply_to = next(iter(self.reply_select_menu.values), None)
+
     async def handle_element_select(self, interaction: discord.Interaction):
         await interaction.response.defer()
         selected_element = next(
@@ -214,6 +235,7 @@ class SearchView(discord.ui.View):
                     selected_providers,
                     self.search_options,
                     self.guild_config,
+                    self.recent_users,
                 ),
                 embeds=(await SearchView.generate_embed(results[0]),),
             )
@@ -231,6 +253,7 @@ class SearchView(discord.ui.View):
                     selected_providers,
                     self.search_options,
                     self.guild_config,
+                    self.recent_users,
                 ),
                 embeds=tuple(),
             )
@@ -240,10 +263,17 @@ class SearchView(discord.ui.View):
         self.stop()
         self._disable_ui()
         original_response = await self.original_interaction.original_response()
-        await interaction.channel.send(embeds=original_response.embeds)
+        if self.reply_to is None:
+            await interaction.channel.send(embeds=original_response.embeds)
+        else:
+            reply_text = f"Hey <@{self.reply_to}>, {interaction.user.display_name} thought this might help you!"
+            await interaction.channel.send(
+                content=reply_text, embeds=original_response.embeds
+            )
         await original_response.delete()
 
     async def handle_cancel(self, interaction: discord.Interaction):
         await interaction.response.defer()
+
         self.stop()
         await self.original_interaction.delete_original_response()

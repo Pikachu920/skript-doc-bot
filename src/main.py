@@ -18,6 +18,7 @@ from providers import (
 from views import SearchView
 
 intents = discord.Intents.default()
+intents.members = True
 bot = commands.Bot(command_prefix="/", description="Skript bot", intents=intents)
 
 providers = {
@@ -154,6 +155,11 @@ async def handle_sources_command(interaction: discord.Interaction, query: str):
                 doc_provider.providers,
                 search_options,
                 guild_config,
+                await utils.try_to_get_recent_users(
+                    bot,
+                    interaction.channel,
+                    excluded_user_ids=(bot.user.id, interaction.user.id),
+                ),
             ),
             embed=await SearchView.generate_embed(results[0]),
             ephemeral=True,
