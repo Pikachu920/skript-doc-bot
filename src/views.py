@@ -267,6 +267,7 @@ class SearchView(discord.ui.View):
                     self.search_options,
                     self.guild_config,
                     self.recent_users,
+                    self.reply_to
                 ),
                 embeds=tuple(),
             )
