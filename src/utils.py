@@ -38,9 +38,12 @@ async def try_to_get_recent_users(
     ) -> discord.User | discord.Member:
         guild = message.guild
         if guild is not None:
-            fetched_member = await guild.fetch_member(message.author.id)
-            if fetched_member is not None:
-                return fetched_member
+            try:
+                fetched_member = await guild.fetch_member(message.author.id)
+                if fetched_member is not None:
+                    return fetched_member
+            except discord.errors.NotFound:
+                pass
         return await bot.fetch_user(message.author.id)
 
     try:
