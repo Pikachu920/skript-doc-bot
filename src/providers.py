@@ -2,6 +2,7 @@ import html
 import logging
 from abc import abstractmethod, ABCMeta
 from typing import Sequence, Optional
+from urllib.parse import quote_plus
 
 import httpx
 
@@ -123,7 +124,7 @@ class SkriptHubDocumentationProvider(DocumentationProvider):
 
 class SkUnityDocumentationProvider(DocumentationProvider):
     def __init__(self, key: str):
-        self.auth_params = (("key", key),)
+        self.key = key
 
     @staticmethod
     def _compute_type(element: dict) -> SyntaxType:
@@ -146,17 +147,13 @@ class SkUnityDocumentationProvider(DocumentationProvider):
         return None
 
     def _convert_element(self, element: dict) -> SyntaxElement:
-        examples = tuple(
-            html.unescape(example_object["example"])
-            for example_object in element["examples"]
-        )
         return SyntaxElement(
             id=element["id"],
             provider=self,
             name=element["name"],
             description=element["desc"],
             patterns=html.unescape(element["pattern"]).split("\n"),
-            examples=examples,
+            examples=None,
             required_addon=element["addon"],
             required_addon_version=_convert_addon_version(element["version"]),
             required_minecraft_version=None,  # TODO: this
@@ -169,17 +166,33 @@ class SkUnityDocumentationProvider(DocumentationProvider):
         )
 
     async def perform_search(self, options: SearchOptions) -> Sequence[SyntaxElement]:
-        async with httpx.AsyncClient(
-            params=self.auth_params, timeout=PROVIDER_TIMEOUT.total_seconds()
-        ) as client:
-            query_params = {"function": "doSearch", "query": options.query}
+        async with httpx.AsyncClient(timeout=PROVIDER_TIMEOUT.total_seconds()) as client:
             response = await client.get(
-                "https://docs.skunity.com/api/", params=query_params
+                f"https://api.skunity.com/v1/{quote_plus(self.key)}/docs/search/{quote_plus(options.query)}"
             )
             response.raise_for_status()
             response_body = response.json()
-            elements = response_body["result"]["records"]
+            elements = response_body["result"]
             return tuple(self._convert_element(element) for element in elements)
+
+    async def prepare_element_for_display(self, element: SyntaxElement) -> None:
+        if element.provider.name != self.name:
+            raise ValueError(
+                f"'element' was provided by {element.provider.name}, but must be provided by {self.name}"
+            )
+        if element.examples is None:
+            async with httpx.AsyncClient(timeout=PROVIDER_TIMEOUT.total_seconds()) as client:
+                response = await client.get(
+                    f"https://api.skunity.com/v1/{quote_plus(self.key)}/docs/getExamplesByID/{quote_plus(element.id)}"
+                )
+                response.raise_for_status()
+                example_response = response.json()["result"]
+                if isinstance(example_response, list):
+                    return
+                element.examples = tuple(
+                    html.unescape(example_object["example"])
+                    for example_object in example_response.values() if isinstance(example_object, dict) and example_object.get("example")
+                )
 
     @property
     def name(self):
