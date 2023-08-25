@@ -277,13 +277,13 @@ class SearchView(discord.ui.View):
         self.stop()
         self._disable_ui()
         original_response = await self.original_interaction.original_response()
+        embeds = original_response.embeds
+        for embed in embeds:
+            embed.set_footer(f"{embed.footer.text} (Requested by <@{self.reply_to}>)")
         if self.reply_to is None:
-            await interaction.channel.send(embeds=original_response.embeds)
+            await interaction.channel.send(embeds=embeds)
         else:
             reply_text = f"Hey <@{self.reply_to}>, {interaction.user.display_name} thought this might help you!"
-            embeds = original_response.embeds
-            for embed in embeds:
-                embed.set_footer(f"{embed.footer.text} (Requested by <@{self.reply_to}>)")
             await interaction.channel.send(
                 content=reply_text, embeds=embeds
             )
