@@ -281,8 +281,11 @@ class SearchView(discord.ui.View):
             await interaction.channel.send(embeds=original_response.embeds)
         else:
             reply_text = f"Hey <@{self.reply_to}>, {interaction.user.display_name} thought this might help you!"
+            embeds = original_response.embeds
+            for embed in embeds:
+                embed.set_footer(f"{embed.footer.text} (Requested by <@{self.reply_to}>)")
             await interaction.channel.send(
-                content=reply_text, embeds=original_response.embeds
+                content=reply_text, embeds=embeds
             )
         await original_response.delete()
 
