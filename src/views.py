@@ -111,6 +111,7 @@ class SearchView(discord.ui.View):
 
         self.reply_to = default_recent_user_id
         self.recent_users = recent_users
+        self.default_recent_user_id = default_recent_user_id
         if (
             isinstance(original_interaction.channel, TextChannel)
             and len(recent_users) > 0
@@ -249,6 +250,7 @@ class SearchView(discord.ui.View):
                     self.search_options,
                     self.guild_config,
                     self.recent_users,
+                    self.default_recent_user_id,
                 ),
                 embeds=(await SearchView.generate_embed(results[0]),),
             )
