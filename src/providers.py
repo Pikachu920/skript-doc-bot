@@ -6,7 +6,7 @@ from urllib.parse import quote_plus
 
 import httpx
 
-from constants import MAX_SELECT_OPTION_COUNT, PROVIDER_TIMEOUT
+from constants import MAX_SELECT_OPTION_COUNT, PROVIDER_TIMEOUT, USER_AGENT
 from models import SearchOptions, SyntaxElement, SyntaxType
 
 
@@ -43,7 +43,7 @@ class DocumentationProvider(metaclass=ABCMeta):
 
 class SkriptHubDocumentationProvider(DocumentationProvider):
     def __init__(self, token: str):
-        self.auth_headers = (("Authorization", f"Token {token}"),)
+        self.headers = (("Authorization", f"Token {token}"), ("User-Agent", USER_AGENT))
 
     @staticmethod
     def _compute_type(element: dict) -> SyntaxType:
@@ -86,7 +86,7 @@ class SkriptHubDocumentationProvider(DocumentationProvider):
 
     async def perform_search(self, options: SearchOptions) -> Sequence[SyntaxElement]:
         async with httpx.AsyncClient(
-            headers=self.auth_headers, timeout=PROVIDER_TIMEOUT.total_seconds()
+            headers=self.headers, timeout=PROVIDER_TIMEOUT.total_seconds()
         ) as client:
             query_params = {"search": options.query}
             response = await client.get(
@@ -102,7 +102,7 @@ class SkriptHubDocumentationProvider(DocumentationProvider):
             )
         if element.examples is None:
             async with httpx.AsyncClient(
-                headers=self.auth_headers, timeout=PROVIDER_TIMEOUT.total_seconds()
+                headers=self.headers, timeout=PROVIDER_TIMEOUT.total_seconds()
             ) as client:
                 query_params = {"syntax": element.id}
                 response = await client.get(
@@ -125,6 +125,7 @@ class SkriptHubDocumentationProvider(DocumentationProvider):
 class SkUnityDocumentationProvider(DocumentationProvider):
     def __init__(self, key: str):
         self.key = key
+        self.headers = (("User-Agent", USER_AGENT),)
 
     @staticmethod
     def _compute_type(element: dict) -> SyntaxType:
@@ -166,7 +167,7 @@ class SkUnityDocumentationProvider(DocumentationProvider):
         )
 
     async def perform_search(self, options: SearchOptions) -> Sequence[SyntaxElement]:
-        async with httpx.AsyncClient(timeout=PROVIDER_TIMEOUT.total_seconds()) as client:
+        async with httpx.AsyncClient(headers=self.headers, timeout=PROVIDER_TIMEOUT.total_seconds()) as client:
             response = await client.get(
                 f"https://api.skunity.com/v1/{quote_plus(self.key)}/docs/search/{quote_plus(options.query)}"
             )
@@ -181,7 +182,7 @@ class SkUnityDocumentationProvider(DocumentationProvider):
                 f"'element' was provided by {element.provider.name}, but must be provided by {self.name}"
             )
         if element.examples is None:
-            async with httpx.AsyncClient(timeout=PROVIDER_TIMEOUT.total_seconds()) as client:
+            async with httpx.AsyncClient(headers=self.headers, timeout=PROVIDER_TIMEOUT.total_seconds()) as client:
                 response = await client.get(
                     f"https://api.skunity.com/v1/{quote_plus(self.key)}/docs/getExamplesByID/{quote_plus(element.id)}"
                 )
