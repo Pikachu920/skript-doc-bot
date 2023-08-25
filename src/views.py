@@ -281,7 +281,10 @@ class SearchView(discord.ui.View):
         original_response = await self.original_interaction.original_response()
         embeds = original_response.embeds
         for embed in embeds:
-            embed.set_footer(text=f"{embed.footer.text} | Requested by {interaction.user.display_name} ({interaction.user.id})")
+            embed.set_footer(
+                text=f"{embed.footer.text} | Requested by {interaction.user.display_name} ({interaction.user.id})",
+                icon_url=embed.icon_url
+            )
         if self.reply_to is None:
             await interaction.channel.send(embeds=embeds)
         else:
