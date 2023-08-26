@@ -215,6 +215,7 @@ class SearchView(discord.ui.View):
     async def handle_reply_select(self, interaction: discord.Interaction):
         await interaction.response.defer()
         self.reply_to = next(iter(self.reply_select_menu.values), None)
+        self.default_recent_user_id = self.reply_to
 
     async def handle_element_select(self, interaction: discord.Interaction):
         await interaction.response.defer()
