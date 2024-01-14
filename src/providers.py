@@ -129,23 +129,9 @@ class SkUnityDocumentationProvider(DocumentationProvider):
 
     @staticmethod
     def _compute_type(element: dict) -> SyntaxType:
-        match element["doc"]:
-            case "expressions":
-                return SyntaxType.EXPRESSION
-            case "conditions":
-                return SyntaxType.CONDITION
-            case "events":
-                return SyntaxType.EVENT
-            case "types":
-                return SyntaxType.CLASSINFO
-            case "effects":
-                return SyntaxType.EFFECT
-            case "functions":
-                return SyntaxType.FUNCTION
-            case "structures":
-                return SyntaxType.STRUCTURE
-            case _:
-                raise ValueError(f"Unimplemented SyntaxType {element['doc']}")
+        syntax_type_name = element["doc"]
+        syntax_type_name = syntax_type_name[:len(syntax_type_name) - 1]
+        return SyntaxType[syntax_type_name.upper()]
 
     @staticmethod
     def _compute_event_values(element: dict) -> Optional[Sequence[str]]:
