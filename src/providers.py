@@ -142,6 +142,8 @@ class SkUnityDocumentationProvider(DocumentationProvider):
                 return SyntaxType.EFFECT
             case "functions":
                 return SyntaxType.FUNCTION
+            case "structures":
+                return SyntaxType.STRUCTURE
             case _:
                 raise ValueError(f"Unimplemented SyntaxType {element['doc']}")
 

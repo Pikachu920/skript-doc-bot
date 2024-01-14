@@ -22,6 +22,7 @@ class SyntaxType(Enum):
     FUNCTION = "function"
     EVENT = "event"
     CLASSINFO = "classinfo"
+    STRUCTURE = "structure"
 
     @property
     def colour(self) -> discord.Colour:
@@ -35,6 +36,8 @@ class SyntaxType(Enum):
             case SyntaxType.FUNCTION:
                 return discord.Colour.from_rgb(180, 180, 180)
             case SyntaxType.EVENT:
+                return discord.Colour.from_rgb(167, 99, 255)
+            case SyntaxType.STRUCTURE:
                 return discord.Colour.from_rgb(167, 99, 255)
             case SyntaxType.CLASSINFO:
                 return discord.Colour.from_rgb(243, 156, 18)
@@ -55,6 +58,8 @@ class SyntaxType(Enum):
             case SyntaxType.FUNCTION:
                 return "⬜"
             case SyntaxType.EVENT:
+                return "🟪"
+            case SyntaxType.STRUCTURE:
                 return "🟪"
             case SyntaxType.CLASSINFO:
                 return "🟧"
