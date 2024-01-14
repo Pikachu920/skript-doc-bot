@@ -130,6 +130,8 @@ class SkUnityDocumentationProvider(DocumentationProvider):
     @staticmethod
     def _compute_type(element: dict) -> SyntaxType:
         syntax_type_name = element["doc"]
+        if syntax_type_name == "types":
+            return SyntaxType.CLASSINFO
         syntax_type_name = syntax_type_name[:len(syntax_type_name) - 1]
         return SyntaxType[syntax_type_name.upper()]
 
