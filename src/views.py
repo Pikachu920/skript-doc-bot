@@ -111,6 +111,7 @@ class SearchView(discord.ui.View):
 
         self.reply_to = default_recent_user_id
         self.recent_users = recent_users
+        self.default_recent_user_id = default_recent_user_id
         if (
             isinstance(original_interaction.channel, TextChannel)
             and len(recent_users) > 0
@@ -214,6 +215,7 @@ class SearchView(discord.ui.View):
     async def handle_reply_select(self, interaction: discord.Interaction):
         await interaction.response.defer()
         self.reply_to = next(iter(self.reply_select_menu.values), None)
+        self.default_recent_user_id = self.reply_to
 
     async def handle_element_select(self, interaction: discord.Interaction):
         await interaction.response.defer()
@@ -249,6 +251,7 @@ class SearchView(discord.ui.View):
                     self.search_options,
                     self.guild_config,
                     self.recent_users,
+                    self.default_recent_user_id,
                 ),
                 embeds=(await SearchView.generate_embed(results[0]),),
             )
@@ -277,12 +280,18 @@ class SearchView(discord.ui.View):
         self.stop()
         self._disable_ui()
         original_response = await self.original_interaction.original_response()
+        embeds = original_response.embeds
+        for embed in embeds:
+            embed.set_footer(
+                text=f"{embed.footer.text} | Requested by {interaction.user.display_name} ({interaction.user.id})",
+                icon_url=embed.footer.icon_url
+            )
         if self.reply_to is None:
-            await interaction.channel.send(embeds=original_response.embeds)
+            await interaction.channel.send(embeds=embeds)
         else:
             reply_text = f"Hey <@{self.reply_to}>, {interaction.user.display_name} thought this might help you!"
             await interaction.channel.send(
-                content=reply_text, embeds=original_response.embeds
+                content=reply_text, embeds=embeds
             )
         await original_response.delete()
 
