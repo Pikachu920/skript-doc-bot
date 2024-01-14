@@ -139,6 +139,10 @@ class SkUnityDocumentationProvider(DocumentationProvider):
                 return SyntaxType.CLASSINFO
             case "effects":
                 return SyntaxType.EFFECT
+            case "functions":
+                return SyntaxType.FUNCTION
+            case _:
+                raise ValueError(f"Unimplemented SyntaxType {element['doc']}")
 
     @staticmethod
     def _compute_event_values(element: dict) -> Optional[Sequence[str]]:
