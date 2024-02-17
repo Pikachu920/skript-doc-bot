@@ -17,7 +17,7 @@ def _convert_addon_version(addon_version: Optional[str]) -> Optional[str]:
     if casefold_addon_version == "unknown":
         return None
     elif casefold_addon_version.startswith("unknown"):
-        return addon_version[len("unknown") :].strip()
+        return addon_version[len("unknown"):].strip()
     return addon_version
 
 
@@ -132,6 +132,8 @@ class SkUnityDocumentationProvider(DocumentationProvider):
         syntax_type_name = element["doc"]
         if syntax_type_name == "types" or syntax_type_name == "classes":
             return SyntaxType.CLASSINFO
+        if syntax_type_name == "expression":
+            return SyntaxType.EXPRESSION
         syntax_type_name = syntax_type_name[:len(syntax_type_name) - 1]
         return SyntaxType[syntax_type_name.upper()]
 
