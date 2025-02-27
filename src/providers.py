@@ -3,6 +3,7 @@ import logging
 from abc import abstractmethod, ABCMeta
 from typing import Sequence, Optional
 from urllib.parse import quote_plus
+from datetime import datetime, timedelta
 
 import httpx
 
@@ -40,6 +41,97 @@ class DocumentationProvider(metaclass=ABCMeta):
     async def prepare_element_for_display(self, element: SyntaxElement) -> None:
         pass
 
+
+class SkriptLangDocumentationProvider(DocumentationProvider):
+
+    def __init__(self):
+        self.all_elements = None
+        self.last_request_time = None
+
+    @staticmethod
+    def _compute_event_values(element: dict) -> Optional[Sequence[str]]:
+        return None
+
+    def _convert_element(self, type: SyntaxType, element: dict) -> SyntaxElement:
+        examples = None
+        if "examples" in element:
+            examples = [element["examples"].join("\n")]
+        return SyntaxElement(
+            id=element["id"],
+            provider=self,
+            name=element["name"],
+            description=element.get("description", []).join("\n"),
+            patterns=html.unescape(element["patterns"].join("\n")),
+            examples=examples,
+            required_addon="Skript",
+            required_addon_version=element["since"],
+            required_minecraft_version=None,
+            type=type,
+            required_plugins=None,
+            return_type=element.get("return-type", None),
+            event_values=None,
+            cancellable=None,
+            link=f"https://docs.skriptlang.org/docs.html?search=#{quote_plus(element["id"])}",
+        )
+
+    
+    @staticmethod
+    def _compute_match_level(query: str, element: SyntaxElement) -> Optional[int]:
+        name_matches = query in element.description
+        description_matches = query in element.description
+        if name_matches and description_matches:
+            return 1
+        elif name_matches:
+            return 2
+        elif description_matches:
+            return 3
+        else:
+            return None
+
+    @staticmethod
+    async def _get_all_elements() -> Sequence[SyntaxElement]:
+        async with httpx.AsyncClient(timeout=PROVIDER_TIMEOUT.total_seconds()) as client:
+            response = await client.get("https://docs.skriptlang.org/docs.json")
+            response.raise_for_status()
+            response_body = response.json()
+            all_elements = []
+            for type, key in (
+                (SyntaxType.CONDITION, "conditions"),
+                (SyntaxType.EFFECT, "effects"),
+                (SyntaxType.EXPRESSION, "expressions"),
+                (SyntaxType.EVENT, "events"),
+                (SyntaxType.CLASSINFO, "classes"),
+                (SyntaxType.STRUCTURE, "structures"),
+                (SyntaxType.SECTION, "sections"),
+                (SyntaxType.FUNCTION, "functions"),
+            ):
+                all_elements += [
+                    SkriptLangDocumentationProvider._convert_element(type, element)
+                    for element in response_body[key]
+                ]
+        return all_elements
+    
+    async def perform_search(self, options: SearchOptions) -> Sequence[SyntaxElement]:
+        if self.all_elements is None or (datetime.now() - self.last_request_time) > timedelta(hours=1):
+            self.last_request_time = datetime.now()
+            self.all_elements = SkriptLangDocumentationProvider._get_all_elements()
+        matching_elements = [element for element in self.all_elements if SkriptLangDocumentationProvider._compute_match_level(options.query, element) is not None]
+        matching_elements.sort(key=lambda element: SkriptLangDocumentationProvider._compute_match_level(options.query, element))
+        return matching_elements
+
+    async def prepare_element_for_display(self, element: SyntaxElement) -> None:
+        if element.provider.name != self.name:
+            raise ValueError(
+                f"'element' was provided by {element.provider.name}, but must be provided by {self.name}"
+            )
+
+    @property
+    def name(self):
+        return "SkriptLang"
+
+    @property
+    def icon_url(self):
+        return "https://docs.skriptlang.org/assets/icon.png"
 
 class SkriptHubDocumentationProvider(DocumentationProvider):
     def __init__(self, token: str):
@@ -198,9 +290,6 @@ class SkUnityDocumentationProvider(DocumentationProvider):
     @property
     def icon_url(self):
         return "https://i.imgur.com/Ci6jjhv.png"
-
-
-# TODO: implement skriptlang. skriptlang docs site currently generates invalid json :(
 
 
 class CombinedDocumentationProvider(DocumentationProvider):
