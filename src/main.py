@@ -14,6 +14,7 @@ from models import SearchOptions, GuildConfig
 from providers import (
     SkriptHubDocumentationProvider,
     SkUnityDocumentationProvider,
+    SkriptLangDocumentationProvider,
     CombinedDocumentationProvider,
 )
 from views import SearchView
@@ -23,6 +24,7 @@ intents.members = True
 bot = commands.Bot(command_prefix="/", description="Skript bot", intents=intents)
 
 providers = {
+    "skriptlang": SkriptLangDocumentationProvider(),
     "skripthub": SkriptHubDocumentationProvider(os.environ["SKRIPT_SKRIPTHUB_TOKEN"]),
     "skunity": SkUnityDocumentationProvider(os.environ["SKRIPT_SKUNITY_KEY"]),
 }
