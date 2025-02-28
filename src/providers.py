@@ -56,6 +56,9 @@ class SkriptLangDocumentationProvider(DocumentationProvider):
         examples = None
         if "examples" in element:
             examples = [html.unescape("\n".join(element["examples"]))]
+        required_addon_version = element.get("since", None)
+        if isinstance(list, required_addon_version):
+            required_addon_version = ", ".join(required_addon_version)
         return SyntaxElement(
             id=element["id"],
             provider=self,
@@ -64,7 +67,7 @@ class SkriptLangDocumentationProvider(DocumentationProvider):
             patterns="\n".join(element.get("patterns", [])),
             examples=examples,
             required_addon="Skript",
-            required_addon_version=", ".join(element.get("since", [])),
+            required_addon_version=required_addon_version,
             required_minecraft_version=None,
             type=type,
             required_plugins=None,
