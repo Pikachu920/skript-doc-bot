@@ -40,17 +40,17 @@ class SearchView(discord.ui.View):
             url=element.link,
         )
 
-        code_block_len = len("```vb\n\n```")
+        code_block_len = len("```applescript\n\n```")
         if element.examples and len(element.examples) > 0:
-            example_field_content = "```vb\n"
+            example_field_content = "```applescript\n"
             example_field_content += utils.escape_code_block_content(
                 element.examples[0]
             )[: EMBED_FIELD_VALUE_MAX_LENGTH - code_block_len]
             example_field_content += "\n```"
             embed.add_field(name="Example", value=example_field_content, inline=True)
-        else:
+        elif element.patterns and len(elemment.patterns) > 0:
             all_patterns = "\n".join(element.patterns)
-            pattern_field_content = "```vb\n"
+            pattern_field_content = "```applescript\n"
             pattern_field_content += utils.escape_code_block_content(all_patterns)[
                 : EMBED_FIELD_VALUE_MAX_LENGTH - code_block_len
             ]
