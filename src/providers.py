@@ -52,7 +52,8 @@ class SkriptLangDocumentationProvider(DocumentationProvider):
     def _compute_event_values(element: dict) -> Optional[Sequence[str]]:
         return None
 
-    def _convert_element(self, type: SyntaxType, element: dict) -> SyntaxElement:
+    @staticmethod
+    def _convert_element(type: SyntaxType, element: dict) -> SyntaxElement:
         examples = None
         if "examples" in element:
             examples = [element["examples"].join("\n")]
