@@ -114,7 +114,7 @@ class SkriptLangDocumentationProvider(DocumentationProvider):
     async def perform_search(self, options: SearchOptions) -> Sequence[SyntaxElement]:
         if self.all_elements is None or (datetime.now() - self.last_request_time) > timedelta(hours=1):
             self.last_request_time = datetime.now()
-            self.all_elements = SkriptLangDocumentationProvider._get_all_elements()
+            self.all_elements = await SkriptLangDocumentationProvider._get_all_elements()
         matching_elements = [element for element in self.all_elements if SkriptLangDocumentationProvider._compute_match_level(options.query, element) is not None]
         matching_elements.sort(key=lambda element: SkriptLangDocumentationProvider._compute_match_level(options.query, element))
         return matching_elements
