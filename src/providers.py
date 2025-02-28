@@ -61,7 +61,7 @@ class SkriptLangDocumentationProvider(DocumentationProvider):
             provider=self,
             name=element["name"],
             description="\n".join(element.get("description", [])),
-            patterns="\n".join(element["patterns"]),
+            patterns="\n".join(element.get("patterns", [])),
             examples=examples,
             required_addon="Skript",
             required_addon_version=", ".join(element.get("since", [])),
