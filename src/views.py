@@ -48,7 +48,7 @@ class SearchView(discord.ui.View):
             )[: EMBED_FIELD_VALUE_MAX_LENGTH - code_block_len]
             example_field_content += "\n```"
             embed.add_field(name="Example", value=example_field_content, inline=True)
-        elif element.patterns and len(elemment.patterns) > 0:
+        elif element.patterns and len(element.patterns) > 0:
             all_patterns = "\n".join(element.patterns)
             pattern_field_content = "```applescript\n"
             pattern_field_content += utils.escape_code_block_content(all_patterns)[
