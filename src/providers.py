@@ -80,14 +80,16 @@ class SkriptLangDocumentationProvider(DocumentationProvider):
     
     @staticmethod
     def _compute_match_level(query: str, element: SyntaxElement) -> Optional[int]:
-        name_matches = query in element.description
+        if element.name == query:
+            return 1
+        name_matches = query in element.name
         description_matches = query in element.description
         if name_matches and description_matches:
-            return 1
-        elif name_matches:
             return 2
-        elif description_matches:
+        elif name_matches:
             return 3
+        elif description_matches:
+            return 4
         else:
             return None
             
