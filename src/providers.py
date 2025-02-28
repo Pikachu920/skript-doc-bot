@@ -55,7 +55,9 @@ class SkriptLangDocumentationProvider(DocumentationProvider):
     def _convert_element(self, type: SyntaxType, element: dict) -> SyntaxElement:
         examples = None
         if "examples" in element:
-            examples = [html.unescape("\n".join(element["examples"]))]
+            example = html.unescape("\n".join(element["examples"]))
+            if example != "" and not example.isspace():
+                examples = [example]
         required_addon_version = element.get("since", None)
         if isinstance(required_addon_version, list):
             required_addon_version = ", ".join(required_addon_version)
@@ -64,7 +66,7 @@ class SkriptLangDocumentationProvider(DocumentationProvider):
             provider=self,
             name=element["name"],
             description="\n".join(element.get("description", [])),
-            patterns="\n".join(element.get("patterns", [])),
+            patterns=[pattern for pattern in element.get("patterns", []) if pattern != "" and not pattern.isspace()],
             examples=examples,
             required_addon="Skript",
             required_addon_version=required_addon_version,
