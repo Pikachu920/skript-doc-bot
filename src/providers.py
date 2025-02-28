@@ -1,6 +1,8 @@
 import html
 import logging
+import re
 from abc import abstractmethod, ABCMeta
+from Levenshtein import distance
 from typing import Sequence, Optional
 from urllib.parse import quote_plus
 from datetime import datetime, timedelta
@@ -298,6 +300,95 @@ class SkUnityDocumentationProvider(DocumentationProvider):
     @property
     def icon_url(self):
         return "https://i.imgur.com/Ci6jjhv.png"
+
+
+
+class SkriptMcDocumentationProvider(DocumentationProvider):
+    def __init__(self, key: str):
+        self.key = key
+        self.headers = (("User-Agent", USER_AGENT),)
+        self.addons = self.load_addons()
+        self.syntaxes = self.load_syntaxes()
+
+    def load_addons(self) -> Sequence:
+        client = httpx.Client(headers=self.headers, timeout=PROVIDER_TIMEOUT.total_seconds())
+        response = client.get(
+            f"https://skript-mc.fr/api/documentation/addons?api_key={quote_plus(self.key)}"
+        )
+        return response.json()
+
+    def load_syntaxes(self) -> Sequence[SyntaxElement]:
+        client = httpx.Client(headers=self.headers, timeout=PROVIDER_TIMEOUT.total_seconds())
+        response = client.get(
+            f"https://skript-mc.fr/api/documentation/syntaxes?api_key={quote_plus(self.key)}"
+        )
+        return tuple(self._convert_element(element) for element in response.json())
+
+    @staticmethod
+    def _compute_type(element: dict) -> SyntaxType:
+        syntax_type_name = element["category"]
+        match syntax_type_name:
+            case "types": return SyntaxType.CLASSINFO
+            case "evenements": return SyntaxType.EVENT
+            case "fonctions": return SyntaxType.FUNCTION
+            case "effets": return SyntaxType.EFFECT
+
+        return SyntaxType[syntax_type_name[:len(syntax_type_name) - 1].upper()]
+
+    @staticmethod
+    def _compute_event_values(element: dict) -> Optional[Sequence[str]]:
+        # Not available in this API
+        return None
+
+    def _convert_element(self, element: dict) -> SyntaxElement:
+        matched_addon = next((addon for addon in self.addons if addon["name"].lower() == element["addon"].lower()), None)
+        return SyntaxElement(
+            id=element["id"],
+            provider=self,
+            name=element["name"],
+            description=html.unescape(element["content"]).replace("<br />", ""),
+            patterns=html.unescape(element["pattern"]).split("<br />"),
+            examples=html.unescape(element["example"]).split("<br />"),
+            required_minecraft_version=None,
+            required_plugins=matched_addon["dependencies"],
+            return_type=None,
+            event_values=None,
+            required_addon=matched_addon["name"],
+            required_addon_version=_convert_addon_version(element["version"]),
+            type=SkriptMcDocumentationProvider._compute_type(element),
+            cancellable=None,
+            link=element["documentationUrl"],
+        )
+
+    async def perform_search(self, options: SearchOptions) -> Sequence[SyntaxElement]:
+        if not options.query:
+            return []
+
+        def levenshteinDistance(element: SyntaxElement) -> float:
+            name_match = re.match(r"(?P<englishName>.+) \((?P<frenchName>.*?)\)", element.name)
+            english_name = name_match.group("englishName") if name_match else ""
+            french_name = name_match.group("frenchName") if name_match else ""
+            return min(distance(english_name.lower(), options.query.lower()),
+                       distance(french_name.lower(), options.query.lower()))
+
+        best_match = min(self.syntaxes, key=levenshteinDistance, default=None)
+
+        return [best_match] if best_match else []
+
+    async def prepare_element_for_display(self, element: SyntaxElement) -> None:
+        if element.provider.name != self.name:
+            raise ValueError(
+                f"'element' was provided by {element.provider.name}, but must be provided by {self.name}"
+            )
+
+    @property
+    def name(self):
+        return "Skript-MC"
+
+    @property
+    def icon_url(self):
+        return "https://skript-mc.fr/public_uploads/logo-squared-67c1ff4391b5d656398392.png"
+
 
 
 class CombinedDocumentationProvider(DocumentationProvider):
