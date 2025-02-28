@@ -57,7 +57,7 @@ class SkriptLangDocumentationProvider(DocumentationProvider):
         if "examples" in element:
             examples = [html.unescape("\n".join(element["examples"]))]
         required_addon_version = element.get("since", None)
-        if isinstance(list, required_addon_version):
+        if isinstance(required_addon_version, list):
             required_addon_version = ", ".join(required_addon_version)
         return SyntaxElement(
             id=element["id"],
