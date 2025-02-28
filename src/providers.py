@@ -88,7 +88,7 @@ class SkriptLangDocumentationProvider(DocumentationProvider):
         else:
             return None
             
-    async def _get_all_elements() -> Sequence[SyntaxElement]:
+    async def _get_all_elements(self) -> Sequence[SyntaxElement]:
         async with httpx.AsyncClient(timeout=PROVIDER_TIMEOUT.total_seconds()) as client:
             response = await client.get("https://docs.skriptlang.org/docs.json")
             response.raise_for_status()
