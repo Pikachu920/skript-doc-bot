@@ -71,7 +71,7 @@ class SkriptLangDocumentationProvider(DocumentationProvider):
             return_type=element.get("return-type", None),
             event_values=None,
             cancellable=None,
-            link=f"https://docs.skriptlang.org/docs.html?search=#{quote_plus(element["id"])}",
+            link=f"https://docs.skriptlang.org/docs.html?search=#{quote_plus(element['id'])}",
         )
 
     
