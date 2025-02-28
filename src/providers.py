@@ -56,13 +56,13 @@ class SkriptLangDocumentationProvider(DocumentationProvider):
     def _convert_element(type: SyntaxType, element: dict) -> SyntaxElement:
         examples = None
         if "examples" in element:
-            examples = [element["examples"].join("\n")]
+            examples = [html.unescape("\n".join(element["examples"]))]
         return SyntaxElement(
             id=element["id"],
             provider=self,
             name=element["name"],
-            description=element.get("description", []).join("\n"),
-            patterns=html.unescape(element["patterns"].join("\n")),
+            description="\n".join(element.get("description", [])),
+            patterns="\n".join(element["patterns"]),
             examples=examples,
             required_addon="Skript",
             required_addon_version=element["since"],
