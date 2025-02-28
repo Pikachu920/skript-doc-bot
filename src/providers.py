@@ -52,8 +52,7 @@ class SkriptLangDocumentationProvider(DocumentationProvider):
     def _compute_event_values(element: dict) -> Optional[Sequence[str]]:
         return None
 
-    @staticmethod
-    def _convert_element(type: SyntaxType, element: dict) -> SyntaxElement:
+    def _convert_element(self, type: SyntaxType, element: dict) -> SyntaxElement:
         examples = None
         if "examples" in element:
             examples = [html.unescape("\n".join(element["examples"]))]
@@ -88,8 +87,7 @@ class SkriptLangDocumentationProvider(DocumentationProvider):
             return 3
         else:
             return None
-
-    @staticmethod
+            
     async def _get_all_elements() -> Sequence[SyntaxElement]:
         async with httpx.AsyncClient(timeout=PROVIDER_TIMEOUT.total_seconds()) as client:
             response = await client.get("https://docs.skriptlang.org/docs.json")
@@ -107,7 +105,7 @@ class SkriptLangDocumentationProvider(DocumentationProvider):
                 (SyntaxType.FUNCTION, "functions"),
             ):
                 all_elements += [
-                    SkriptLangDocumentationProvider._convert_element(type, element)
+                    self._convert_element(type, element)
                     for element in response_body[key]
                 ]
         return all_elements
@@ -115,7 +113,7 @@ class SkriptLangDocumentationProvider(DocumentationProvider):
     async def perform_search(self, options: SearchOptions) -> Sequence[SyntaxElement]:
         if self.all_elements is None or (datetime.now() - self.last_request_time) > timedelta(hours=1):
             self.last_request_time = datetime.now()
-            self.all_elements = await SkriptLangDocumentationProvider._get_all_elements()
+            self.all_elements = await self._get_all_elements()
         matching_elements = [element for element in self.all_elements if SkriptLangDocumentationProvider._compute_match_level(options.query, element) is not None]
         matching_elements.sort(key=lambda element: SkriptLangDocumentationProvider._compute_match_level(options.query, element))
         return matching_elements
