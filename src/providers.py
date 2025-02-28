@@ -64,7 +64,7 @@ class SkriptLangDocumentationProvider(DocumentationProvider):
             patterns="\n".join(element["patterns"]),
             examples=examples,
             required_addon="Skript",
-            required_addon_version=element["since"],
+            required_addon_version=", ".join(element.get("since", [])),
             required_minecraft_version=None,
             type=type,
             required_plugins=None,
