@@ -16,6 +16,7 @@ from providers import (
     SkUnityDocumentationProvider,
     SkriptLangDocumentationProvider,
     CombinedDocumentationProvider,
+    SkriptMcDocumentationProvider,
 )
 from views import SearchView
 
@@ -27,6 +28,7 @@ providers = {
     "skriptlang": SkriptLangDocumentationProvider(),
     "skripthub": SkriptHubDocumentationProvider(os.environ["SKRIPT_SKRIPTHUB_TOKEN"]),
     "skunity": SkUnityDocumentationProvider(os.environ["SKRIPT_SKUNITY_KEY"]),
+    "skriptmc": SkriptMcDocumentationProvider(os.environ["SKRIPT_SKRIPTMC_KEY"])
 }
 
 database_path = Path(os.environ["SKRIPT_DATA_PATH"]) / "data.json"
