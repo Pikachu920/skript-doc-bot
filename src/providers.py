@@ -80,10 +80,12 @@ class SkriptLangDocumentationProvider(DocumentationProvider):
     
     @staticmethod
     def _compute_match_level(query: str, element: SyntaxElement) -> Optional[int]:
-        if element.name == query:
+        casefolded_query = query.casefold()
+        casefolded_element_name = element.name.casefold()
+        if casefolded_element_name == casefolded_query:
             return 1
-        name_matches = query in element.name
-        description_matches = query in element.description
+        name_matches = casefolded_query in casefolded_element_name
+        description_matches = casefolded_query in element.description.casefold()
         if name_matches and description_matches:
             return 2
         elif name_matches:
